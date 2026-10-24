@@ -45,7 +45,7 @@ class ParsedQuestion:
 
 
 def subject_for(session: str, number: int, year: int | None = None):
-    ranges = SUBJECT_RANGES_2025 if year == 2025 else SUBJECT_RANGES
+    ranges = SUBJECT_RANGES_2025 if year is not None and year <= 2025 else SUBJECT_RANGES
     for start, end, subject in ranges[session]:
         if start <= number <= end:
             return subject
@@ -125,24 +125,25 @@ def _ocr_headings(page: fitz.Page, scale: float = 1.2) -> list[tuple[int, float]
 
 def _known_scanned_edition(path: Path, session: str, year: int | None,
                            page_count: int) -> list[ParsedQuestion] | None:
-    """Use verified question clips for the exact official scanned 2025/1 PDFs.
+    """Load verified question positions for exact known scanned official PDFs.
 
-    Hash verification prevents accidentally using coordinates from another PDF.
-    The mapping stores positions only; the uploaded PDF is still preserved and
-    used for displaying each question and its figures.
+    The SHA-256 protects against applying coordinates to different document
+    versions. Original PDFs remain the source of all visible question content.
     """
-    if year != 2025:
-        return None
     layout_path = Path(__file__).with_name("known_scanned_layouts.json")
     if not layout_path.is_file():
         return None
     with path.open("rb") as stream:
         digest = hashlib.file_digest(stream, "sha256").hexdigest()
     layout = json.loads(layout_path.read_text(encoding="utf-8")).get(digest)
-    if not layout or layout.get("edition") != "2025/1" or layout.get("session") != session:
+    if not layout or layout.get("session") != session or layout.get("page_count") != page_count:
+        return None
+    # Matching file hash + year guard, so an uploaded edition cannot silently
+    # receive question coordinates or answer records from another year.
+    if year is None or str(layout.get("edition", "")).split("/")[0] != str(year):
         return None
     if layout.get("page_count") != page_count:
-        raise ValueError("PDF 2025/1 incompatível com o mapa de páginas verificado.")
+        raise ValueError("PDF incompatível com o mapa de páginas verificado.")
     records = layout["questions"]
     expected = set(range(1, 51)) if session == "afternoon" else (
         set(range(1, 29)) | set(range(37, 51))
@@ -266,6 +267,32 @@ def parse_key(path: Path) -> dict[tuple[str, int], str | None]:
     doc = fitz.open(path)
     answers = {}
     try:
+        # Historical UDESC gabaritos (e.g. 2019/1 and 2024/1) print answers
+        # as "01. E" or "1ª Questão (E)". Detect those first and preserve
+        # page/section division, including anulações and corrected answers.
+        compact_answer = re.compile(
+            r"(?<!\d)(\d{1,2})(?:\s*ª\s*Quest[aã]o\s*\(\s*([A-E]|Anulada)\s*\)|\.\s*([A-E]|Anulada)\b)\*?",
+            re.IGNORECASE,
+        )
+        historical = {}
+        for page in doc:
+            raw = page.get_text(sort=True)
+            chunks = re.split(r"(?i)(?:Prova do\s+)?Per[ií]odo\s+Vespertino", raw)
+            is_afternoon = bool(re.search(r"(?i)(?:Prova do\s+)?Per[ií]odo\s+Vespertino", raw))
+            for chunk_idx, chunk in enumerate(chunks):
+                session = "afternoon" if is_afternoon and chunk_idx > 0 else "morning"
+                for line in chunk.splitlines():
+                    for match in compact_answer.finditer(line):
+                        number = int(match.group(1))
+                        if session == "morning" and 29 <= number <= 36:
+                            continue  # English / Spanish duplicate question numbers
+                        if session == "afternoon" and not 1 <= number <= 50:
+                            continue
+                        answer = (match.group(2) or match.group(3)).upper()
+                        historical[(session, number)] = None if answer.startswith("ANULAD") else answer
+        if len(historical) == 92 and sum(x is None for x in historical.values()) <= 92:
+            return historical
+        # Modern table layout (2025/1 onward): retain the original reader.
         for page in doc:
             words = page.get_text("words")
             raw = page.get_text()
