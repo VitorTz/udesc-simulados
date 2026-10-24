@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#10171c">
+  <title>UDESC Simulados — Estúdio de estudos</title>
+  <link rel="stylesheet" href="/static/styles.css">
+  <script src="/static/app.js" defer></script>
+</head>
+<body>
+  <div id="auth-root" class="auth-screen"></div>
+  <div class="layout" id="app-layout" hidden>
+    <aside class="sidebar">
+      <div class="brand" role="button" tabindex="0" onclick="navigate('dashboard')">
+        <div class="logo">U<span>·</span></div>
+        <div><strong>UDESC Simulados</strong><small>ESTÚDIO DE ESTUDOS</small></div>
+      </div>
+      <div class="nav-section">ESPAÇO DE ESTUDO</div>
+      <nav id="sidebar-nav" class="nav" aria-label="Menu principal">
+        <button data-view="dashboard" class="nav-item active"><span class="nav-icon">⌂</span>Visão geral</button>
+        <button data-view="builder" class="nav-item"><span class="nav-icon">▣</span>Novo simulado</button>
+        <button data-view="questions" class="nav-item"><span class="nav-icon">☷</span>Banco de questões</button>
+        <button data-view="history" class="nav-item"><span class="nav-icon">◷</span>Meu desempenho</button>
+        <button data-view="notes" class="nav-item"><span class="nav-icon">▤</span>Anotações</button>
+      </nav>
+      <div class="nav-section">BIBLIOTECA</div>
+      <nav class="nav"><button data-view="editions" class="nav-item"><span class="nav-icon">▱</span>Provas e gabaritos</button></nav>
+      <div class="sidebar-bottom"><span class="status-dot"></span> Seus dados são privados <div class="sidebar-sub">NeonDB PostgreSQL · Cloudflare R2</div></div>
+    </aside>
+    <div class="workspace">
+      <header class="topbar">
+        <button class="mobile-menu" id="menu-toggle" aria-label="Abrir menu">☰</button>
+        <div class="breadcrumb">ÁREA DE ESTUDO <span>/</span> <strong id="crumb">Visão geral</strong></div>
+        <div class="top-actions"><span id="user-email" class="account-email"></span><button id="logout-button" class="btn btn-sm" type="button">Sair</button><span id="today" class="today"></span><button class="btn btn-primary btn-sm" onclick="navigate('builder')"><span>＋</span> Novo simulado</button></div>
+      </header>
+      <main id="main" tabindex="-1"></main>
+    </div>
+  </div>
+  <div id="modal-root" aria-live="polite"></div>
+  <div id="toast-root" aria-live="polite"></div>
+</body>
+</html>

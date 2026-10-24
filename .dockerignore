@@ -1,0 +1,10 @@
+.env
+.env.*
+!.env.example
+.venv
+.git
+.pytest_cache
+__pycache__
+data
+*.sqlite3
+*.pdf
