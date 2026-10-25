@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#10171c">
-  <title>UDESC Simulados — Estúdio de estudos</title>
+  <title>Vestibulares UDESC + UFSC — Estúdio de estudos</title>
   <link rel="stylesheet" href="/static/styles.css">
   <script src="/static/app.js" defer></script>
 </head>
@@ -14,8 +14,10 @@
     <aside class="sidebar">
       <div class="brand" role="button" tabindex="0" onclick="navigate('dashboard')">
         <div class="logo">U<span>·</span></div>
-        <div><strong>UDESC Simulados</strong><small>ESTÚDIO DE ESTUDOS</small></div>
+        <div><strong>Vestibulares UDESC + UFSC</strong><small>ESTÚDIO DE ESTUDOS</small></div>
       </div>
+      <div class="nav-section">VESTIBULAR</div>
+      <div style="padding:0 12px 16px"><label for="bank-select" class="input-label">Banco de questões</label><select id="bank-select" class="select" style="width:100%" onchange="switchBank(this.value)"><option value="UDESC">UDESC</option><option value="UFSC">UFSC</option></select></div>
       <div class="nav-section">ESPAÇO DE ESTUDO</div>
       <nav id="sidebar-nav" class="nav" aria-label="Menu principal">
         <button data-view="dashboard" class="nav-item active"><span class="nav-icon">⌂</span>Visão geral</button>

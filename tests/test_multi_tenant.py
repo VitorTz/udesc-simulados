@@ -32,12 +32,12 @@ SCHEMA = '''
 PRAGMA foreign_keys=ON;
 CREATE TABLE users(id INTEGER PRIMARY KEY AUTOINCREMENT,email TEXT NOT NULL UNIQUE,password_hash TEXT,created_at TEXT DEFAULT CURRENT_TIMESTAMP);
 CREATE TABLE user_sessions(token_hash TEXT PRIMARY KEY,user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,csrf_token TEXT,created_at TEXT DEFAULT CURRENT_TIMESTAMP,expires_at TEXT);
-CREATE TABLE editions(id INTEGER PRIMARY KEY AUTOINCREMENT,user_id INTEGER REFERENCES users(id),label TEXT NOT NULL,imported_at TEXT,warning TEXT DEFAULT '',UNIQUE(user_id,label));
+CREATE TABLE editions(id INTEGER PRIMARY KEY AUTOINCREMENT,user_id INTEGER REFERENCES users(id),label TEXT NOT NULL,imported_at TEXT,warning TEXT DEFAULT '',institution TEXT DEFAULT 'UDESC',booklet_color TEXT DEFAULT 'standard',UNIQUE(user_id,institution,label,booklet_color));
 CREATE TABLE documents(id INTEGER PRIMARY KEY AUTOINCREMENT,edition_id INTEGER REFERENCES editions(id) ON DELETE CASCADE,role TEXT,path TEXT,filename TEXT);
-CREATE TABLE questions(id INTEGER PRIMARY KEY AUTOINCREMENT,edition_id INTEGER REFERENCES editions(id) ON DELETE CASCADE,document_id INTEGER REFERENCES documents(id) ON DELETE CASCADE,session TEXT,number INT,subject TEXT,text_content TEXT,clips_json TEXT,source_page INT,correct_answer TEXT,annulled INT DEFAULT 0,difficulty INT, correct_count INT NOT NULL DEFAULT 0 CHECK(correct_count >= 0));
+CREATE TABLE questions(id INTEGER PRIMARY KEY AUTOINCREMENT,edition_id INTEGER REFERENCES editions(id) ON DELETE CASCADE,document_id INTEGER REFERENCES documents(id) ON DELETE CASCADE,session TEXT,number INT,subject TEXT,text_content TEXT,clips_json TEXT,source_page INT,correct_answer TEXT,annulled INT DEFAULT 0,difficulty INT, correct_count INT NOT NULL DEFAULT 0 CHECK(correct_count >= 0),answer_kind TEXT DEFAULT 'choice',numeric_key INT,proposition_count INT,reference_clips_json TEXT DEFAULT '[]');
 CREATE TABLE notes(question_id INTEGER PRIMARY KEY REFERENCES questions(id) ON DELETE CASCADE,body TEXT,updated_at TEXT);
-CREATE TABLE attempts(id INTEGER PRIMARY KEY AUTOINCREMENT,user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,title TEXT,config_json TEXT,created_at TEXT,completed_at TEXT,status TEXT DEFAULT 'active');
-CREATE TABLE attempt_items(attempt_id INTEGER REFERENCES attempts(id) ON DELETE CASCADE,question_id INTEGER REFERENCES questions(id) ON DELETE SET NULL,position INT,selected_answer TEXT,flagged INT DEFAULT 0,snapshot_subject TEXT,snapshot_edition TEXT,snapshot_correct TEXT,snapshot_annulled INT DEFAULT 0,PRIMARY KEY(attempt_id,position));
+CREATE TABLE attempts(id INTEGER PRIMARY KEY AUTOINCREMENT,user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,title TEXT,config_json TEXT,created_at TEXT,completed_at TEXT,status TEXT DEFAULT 'active',institution TEXT DEFAULT 'UDESC',objective_points REAL,objective_max REAL);
+CREATE TABLE attempt_items(attempt_id INTEGER REFERENCES attempts(id) ON DELETE CASCADE,question_id INTEGER REFERENCES questions(id) ON DELETE SET NULL,position INT,selected_answer TEXT,flagged INT DEFAULT 0,snapshot_subject TEXT,snapshot_edition TEXT,snapshot_correct TEXT,snapshot_annulled INT DEFAULT 0,snapshot_kind TEXT DEFAULT 'choice',snapshot_numeric INT,snapshot_np INT,selected_numeric INT,PRIMARY KEY(attempt_id,position));
 '''
 
 
@@ -100,7 +100,7 @@ def fixture_app(monkeypatch, tmp_path):
     monkeypatch.setattr(api, 'database', fake_db)
     monkeypatch.setattr(authentication, 'database', fake_db)
     objects = {}
-    monkeypatch.setattr(api, 'upload_file', lambda path, key: objects.__setitem__(key, Path(path).read_bytes()))
+    monkeypatch.setattr(api, 'upload_file', lambda path, key, content_type='application/pdf': objects.__setitem__(key, Path(path).read_bytes()))
     monkeypatch.setattr(api, 'upload_bytes', lambda data, key: objects.__setitem__(key, data))
     monkeypatch.setattr(api, 'get_bytes', lambda key: objects[key])
     monkeypatch.setattr(api, 'get_optional_bytes', lambda key: objects.get(key))

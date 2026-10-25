@@ -17,3 +17,17 @@
 .auth-foot{border-top:1px solid #e6eeeb;margin:26px 0 0;padding-top:18px;text-align:center;color:#73837f;font-size:11px;line-height:1.65}
 .account-email{max-width:230px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#687b75;font-size:12px}
 @media(max-width:790px){.account-email{display:none}.auth-card{padding:28px 22px}}
+
+/* UFSC: full-width proposition controls and numerical-answer input. */
+.answers:has(.ufsc-options){display:block}
+.ufsc-options{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px;margin-top:12px}
+.ufsc-options .answer-btn{min-width:0;white-space:nowrap}
+.answers:has(#ufsc-open-answer){display:flex;align-items:end;gap:12px;flex-wrap:wrap}
+.answers #ufsc-open-answer{max-width:180px}
+@media(max-width:540px){.ufsc-options{grid-template-columns:repeat(4,minmax(0,1fr))}}
+
+/* UFSC: source text and illustrations shown independently of other questions. */
+.reference-material { border: 1px solid var(--line); border-radius: 12px; padding: 16px; margin: 16px 0; background: var(--surface-alt, rgba(50,115,94,.04)); }
+.reference-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-weight: 700; margin-bottom: 12px; }
+.reference-group + .reference-group { margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--line); }
+.reference-images img { max-width: 100%; display: block; height: auto; margin: 10px auto 0; border-radius: 6px; }

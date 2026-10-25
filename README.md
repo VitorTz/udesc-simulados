@@ -1,6 +1,8 @@
-# UDESC Simulados — Multi-tenant
+# Vestibulares UDESC + UFSC — Multi-tenant
 
-Aplicação web independente para simulados do vestibular UDESC. A aplicação utiliza **Google Cloud Run** (ou Render) para FastAPI, **NeonDB PostgreSQL** para os dados estruturados e **Cloudflare R2** para os PDFs e imagens. Não possui vínculo oficial com a universidade.
+Aplicação web independente para simulados dos vestibulares **UDESC e UFSC**, com bancos, edições e resultados separados por universidade. A aplicação utiliza **Google Cloud Run** (ou Render) para FastAPI, **NeonDB PostgreSQL** para os dados estruturados e **Cloudflare R2** para os PDFs e imagens. Não possui vínculo oficial com a universidade.
+
+Consulte [UPGRADE_UFSC.md](UPGRADE_UFSC.md) para a implementação UFSC, gabaritos PDF/HTML, fórmula oficial de pontuação objetiva, cor/modelo das provas e importação das edições 2019, 2024 e 2025.
 
 ## Funcionalidades
 
@@ -25,6 +27,7 @@ Aplicação web independente para simulados do vestibular UDESC. A aplicação u
 - `001_initial.sql`: esquema original de questões e simulados.
 - `002_multi_tenant_auth.sql`: tabelas `users`, `user_sessions`, colunas `user_id`, novos índices/uniqueness.
 - `003_question_correct_count.sql`: coluna `questions.correct_count`, incluindo cálculo inicial com simulados históricos já concluídos.
+- `004_ufsc_multi_exam.sql`: suporte simultâneo a UDESC/UFSC, cor da prova, respostas por somatório/abertas, pontuação objetiva e snapshots de correção.
 - Execução: `python -m scripts.migrate` com `DATABASE_MIGRATION_URL` (conexão Neon direta) ou `DATABASE_URL`.
 
 **A migração não atribui dados antigos à primeira pessoa que se cadastrar.** As edições e simulados existentes ficam sem proprietário e inacessíveis até serem explicitamente atribuídos por um administrador.
@@ -66,7 +69,7 @@ O `--dry-run` funciona sem acessar o NeonDB/R2, e `--owner-email` não é necess
 - Ao criar um novo simulado, o filtro escolhido pelo usuário é respeitado; dentro do conjunto resultante, a seleção favorece sempre os menores valores de `correct_count`. O embaralhamento faz sorteios em empates e reorganiza apenas as questões já escolhidas.
 - A migration 003 calcula os acertos retroativos dos simulados existentes, usando o gabarito congelado (`snapshot_correct`) em cada tentativa. Backups são recomendados antes da implantação.
 
-As rotas continuam as mesmas e o campo `correct_count` aparece nos endpoints de questões e nos itens dos simulados.
+As rotas continuam compatíveis com UDESC e `correct_count` aparece nas questões e nos simulados. As listagens aceitam `institution=UDESC|UFSC` (padrão UDESC). A importação recebe `institution`, `color` e dois gabaritos para UFSC; o simulador recebe `institution` no corpo JSON.
 
 ## Segurança e modelo de dados
 
